@@ -3,16 +3,15 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
-from textblob import TextBlob
-import nltk
+from autocorrect import Speller
 import uvicorn
-
-nltk.download('punkt')
 
 app = FastAPI()
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
+
+spell = Speller(lang='en')
 
 class TextInput(BaseModel):
     text: str
@@ -23,8 +22,7 @@ async def serve_index(request: Request):
 
 @app.post("/api/correct")
 async def correct_text(input_data: TextInput):
-    blob = TextBlob(input_data.text)
-    corrected_text = str(blob.correct())
+    corrected_text = spell(input_data.text)
     return {"corrected_text": corrected_text}
 
 if __name__ == "__main__":
